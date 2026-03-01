@@ -46,25 +46,25 @@ def preprocess_data(df_raw):
         upper_bound = Q3 + 1.5 * IQR
         df_encoded[col] = df_encoded[col].clip(lower=lower_bound, upper=upper_bound)
 
-    # 6. Separate features (X) and target (y)
-    y = df_encoded['Yield']
+    # 6. Combine X and y into a single dataframe for output
+    df_encoded_with_target = df_encoded.copy()
 
-    columns_to_exclude_from_X = [
-        'Yield', 'County', 'Farmer', 'Crop', 'Power source',
-        'Water source', 'Crop insurance'
-    ]
-    X = df_encoded.drop(columns=columns_to_exclude_from_X)
-
-    return X, y
+    return df_encoded_with_target
 
 if __name__ == '__main__':
     # Example usage (assuming 'corn_data.csv' is in the same directory)
-    print("Running example usage of preprocess_data function...")
+    print("Running automatic preprocessing script...")
+    print("=" * 50)
+    
     raw_data = pd.read_csv('corn_data.csv')
-    X_processed, y_processed = preprocess_data(raw_data.copy()) # Pass a copy to the function
-    print("\nPreprocessed X head:")
-    print(X_processed.head())
-    print("\nPreprocessed Y head:")
-    print(y_processed.head())
-    print("\nShape of X_processed:", X_processed.shape)
-    print("Shape of y_processed:", y_processed.shape)
+    print(f"Raw data shape: {raw_data.shape}")
+    
+    df_preprocessed = preprocess_data(raw_data.copy())
+    print(f"Preprocessed data shape: {df_preprocessed.shape}")
+    
+    # Save preprocessed data
+    df_preprocessed.to_csv('preprocessed_corn_data.csv', index=False)
+    print("✓ Preprocessed data saved to 'preprocessed_corn_data.csv'")
+    print("=" * 50)
+    print("\nPreprocessed data head:")
+    print(df_preprocessed.head())
