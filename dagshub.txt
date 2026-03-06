@@ -1,0 +1,66 @@
+# DagsHub Configuration for MLflow Integration
+
+## Setup Instructions
+
+### 1. Create a DagsHub Account
+- Go to https://dagshub.com/
+- Sign up with your email or GitHub account
+
+### 2. Create a New Repository
+- Click "New Repository" on DagsHub
+- Name it: `SMSL_Muhamad-Saefuloh-ML`
+- Initialize with README
+
+### 3. Get Your Credentials
+- Go to Settings → Tokens
+- Copy your username and access token
+
+### 4. Environment Variables
+Set these environment variables:
+
+```
+bash
+# For Windows
+set DAGSHUB_USER_NAME=your_dagshub_username
+set DAGSHUB_ACCESS_TOKEN=your_dagshub_access_token
+
+# For Linux/Mac
+export DAGSHUB_USER_NAME=your_dagshub_username
+export DAGSHUB_ACCESS_TOKEN=your_dagshub_access_token
+```
+
+Or create a `.env` file in the project root:
+```
+DAGSHUB_USER_NAME=your_username
+DAGSHUB_ACCESS_TOKEN=your_token
+```
+
+### 5. MLflow Tracking URI
+The MLflow tracking URI will be:
+```
+https://dagshub.com/your_username/SMSL_Muhamad-Saefuloh-ML.mlflow
+```
+
+### 6. Run MLflow UI
+```
+bash
+# Local MLflow UI
+mlflow ui
+
+# With DagsHub remote
+mlflow ui -h 0.0.0.0 -p 5000
+```
+
+## Project Structure on DagsHub
+- `/models` - Saved ML models
+- `/metrics` - Training metrics
+- `/artifacts` - Model artifacts and plots
+
+## Example Usage
+```
+python
+from mlflow_integration import run_training_with_mlflow
+run_training_with_mlflow(
+    experiment_name="Corn_Fertilizer_Classification",
+    run_name="RandomForest_Baseline"
+)
