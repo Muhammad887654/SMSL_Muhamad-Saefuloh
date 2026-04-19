@@ -1,29 +1,46 @@
-CI Workflow Structure with MLflow:
+name: CI - Corn Yield MLflow Training
 
-This document summarizes the Continuous Integration (CI) workflow structure, highlighting how preprocessed data is integrated, and detailing the roles of the modified `modelling.py` and `MLproject` files, along with the new data files.
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
-1.  `MLproject` File:
-    *   Role: The `MLproject` file serves as the central orchestrator for the MLflow project. It defines the project's entry points and the parameters required for execution.
-    *   Integration of Preprocessed Data: It has been modified to explicitly pass the paths to the preprocessed data files (`X_train.csv`, `y_train.csv`, `X_test.csv`, `y_test.csv`) as command-line arguments to the `modelling.py` script. This ensures that the training script receives the correct data sources for each run, eliminating the need for hardcoded paths or hypothetical data generation within the script itself.
+jobs:
+  train:
+    runs-on: ubuntu-latest
 
-2.  `requirements.txt` File:
-    *   Role: The `requirements.txt` file is crucial for defining the Python dependencies. It lists all the necessary Python packages (e.g., `mlflow`, `pandas`, `numpy`, `scikit-learn`, `argparse`) and their versions.
-    *   Ensuring Consistency: It guarantees that the `modelling.py` script executes within a consistent and isolated environment. MLflow automatically uses this file to set up the virtual environment via pip, thereby preventing dependency conflicts and ensuring the reliability and reproducibility of results across different execution platforms, which is vital for CI pipelines.
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-3.  `modelling.py` Script (Modified):
-    *   Role: This Python script contains the core machine learning logic for training a `RandomForestRegressor` model for crop yield prediction.
-    *   Modifications for Preprocessed Data: Unlike its previous version that generated hypothetical data or loaded a single `data_path`, the updated `modelling.py` now specifically loads `X_train`, `y_train`, `X_test`, and `y_test` from the CSV paths provided as command-line arguments. It includes `argparse` to handle these new input parameters.
-    *   MLflow Integration: It retains its robust integration with MLflow, logging model parameters (`n_estimators`, `max_depth`, `random_state`), evaluation metrics (RMSE, R2 score), and the trained model artifact. This ensures that every training run is fully traceable, and its results are stored in the MLflow Tracking Server, linked directly to the specific input data used.
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
 
-4.  New Data Files (`X_train.csv`, `y_train.csv`, `X_test.csv`, `y_test.csv`):
-    *   Purpose: These four CSV files now store the actual preprocessed and split dataset (training, validation, and testing sets) that will be consumed by the `modelling.py` script.
-    *   Role: They serve as the concrete input for model training and evaluation, replacing any hypothetical data generation. This allows the CI workflow to execute with a predefined, consistent dataset, which is a critical step towards using real-world data in an automated pipeline.
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r Membangun_Model/requirements.txt
 
-5.  Collective Enhancement of CI Workflow:
-    These components collectively enhance the consistency, reproducibility, and automation of the machine learning CI workflow with MLflow by:
-    *   Reproducible Data Input: Explicitly defining and passing preprocessed data paths via `MLproject` and `modelling.py` ensures that every run uses the exact same data splits, greatly improving reproducibility.
-    *   Streamlined Execution: `MLproject` orchestrates the execution seamlessly, while `requirements.txt` guarantees environmental consistency.
-    *   Automated Tracking: The `modelling.py` script automatically logs all relevant experiment details to MLflow, providing a comprehensive record for each run.
-    *   Robustness: The workflow is more robust as it now directly uses structured data, allowing for more realistic testing and validation within the CI pipeline. This setup moves closer to production-ready MLOps practices, enabling automated testing and deployment of ML models with version control and transparent tracking.
+      - name: Set MLflow tracking to DagsHub
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+        run: echo "MLflow tracking configured"
 
-link dockerhub: https://scout.docker.com/reports/org/musa8872654/images/host/hub.docker.com/repo/musa8872654%2Fcrop-yield-model
+      - name: Run MLflow training
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+        run: |
+          cd Membangun_Model
+          python modelling.py \
+            --data_path preprocessed_corn_data.csv \
+            --n_estimators 100 \
+            --max_depth 10 \
+            --random_state 42 \
+            --test_size 0.2
