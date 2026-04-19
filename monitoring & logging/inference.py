@@ -161,4 +161,3 @@ if __name__ == "__main__":
     print("\n── Hasil Prediksi ──")
     print(f"  Yield (normalized) : {result['yield_normalized']}")
     print(f"  Kategori           : {result['yield_category']}")
-
