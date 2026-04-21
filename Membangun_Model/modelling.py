@@ -7,24 +7,19 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 
-def load_and_prepare_data(data_path):
-    """Load preprocessed CSV and return feature matrix X and target y."""
-    df = pd.read_csv(data_path)
 
-    # Drop non-numeric / identifier columns
+def load_and_prepare_data(data_path):
+    df = pd.read_csv(data_path)
     drop_cols = ['County', 'Farmer', 'Crop', 'Power source',
                  'Water source', 'Crop insurance', 'Fertilizer_Category']
     df = df.drop(columns=[c for c in drop_cols if c in df.columns])
-
-    target_col = 'Yield'
-    X = df.drop(columns=[target_col])
-    y = df[target_col]
+    X = df.drop(columns=['Yield'])
+    y = df['Yield']
     return X, y
 
 
 def train_model(data_path, n_estimators, max_depth, random_state, test_size):
     X, y = load_and_prepare_data(data_path)
-
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=test_size, random_state=random_state
     )
@@ -33,7 +28,7 @@ def train_model(data_path, n_estimators, max_depth, random_state, test_size):
     print(f"Testing  samples : {len(X_test)}")
     print(f"Features         : {X_train.shape[1]}")
 
-    # ── Autolog: mencatat params, metrics, dan artefak secara otomatis ──
+    # Autolog mencatat semua params, metrics, dan artefak secara otomatis
     mlflow.sklearn.autolog(log_model_signatures=True, log_input_examples=True)
 
     with mlflow.start_run(run_name="RandomForest_CornYield"):
@@ -45,13 +40,8 @@ def train_model(data_path, n_estimators, max_depth, random_state, test_size):
         model.fit(X_train, y_train)
 
         y_pred = model.predict(X_test)
-
         rmse = np.sqrt(mean_squared_error(y_test, y_pred))
         r2   = r2_score(y_test, y_pred)
-
-        # Log tambahan (opsional – autolog sudah menangkap rmse/r2)
-        mlflow.log_metric("rmse_manual", rmse)
-        mlflow.log_metric("r2_manual",   r2)
 
         print(f"\n── Hasil Evaluasi ──")
         print(f"RMSE    : {rmse:.4f}")
@@ -60,7 +50,7 @@ def train_model(data_path, n_estimators, max_depth, random_state, test_size):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train RandomForest Corn Yield Model")
+    parser = argparse.ArgumentParser()
     parser.add_argument("--data_path",    type=str,   default="preprocessed_corn_data.csv")
     parser.add_argument("--n_estimators", type=int,   default=100)
     parser.add_argument("--max_depth",    type=int,   default=10)
